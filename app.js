@@ -4,22 +4,18 @@ const maxApi = require('max-api');
 const { RhythmParser, Nestup, ParseError } = require('@cutelab/nestup/dist/nestup.bundle');
 const {state, commit} = require('./store');
 
-const pattern = `[5] {5
-	2 {4}
-	3 {3}
-	4 {2}
-	5 {1}
-}
-[5] {5
-	2 {4}
-	3 {3}
-	4:2 {3}
+const pattern = `[5] {2}
+[3] {4}
+[5] {2}
+[3] {6
+ 1:2 {3}
+ 5:2 {1}
 }`;
 
 const { MESSAGE_TYPES: _MESSAGE_TYPES } = maxApi;
 const EVENT_CLOCK = 'EVENT_CLOCK';
 const MIDI_EVENT = 'MIDI_EVENT';
-const EVENT_PATTERN = 'EVENT_PATTERN';
+const EVENT_PATTERN_PATH = 'EVENT_PATTERN_PATH';
 
 const MIDI_BUFFER_MAX = 3;
 const midiBuffer = [];
@@ -39,10 +35,12 @@ const MESSAGE_TYPES = {
       return acc;
    }, {})),
    EVENT_CLOCK,
-   MIDI_EVENT
+   MIDI_EVENT,
+   EVENT_PATTERN_PATH
 };
 
 const stop = () => {
+   console.log('STOPPING');
    commit('lastTick', 0);
    commit('count', -1);
    commit('totalCount', 0);
@@ -64,7 +62,7 @@ const handleRunStateChanged = (tick) => {
    }
 };
 
-const noteOn = [69, 64, 144];
+const noteOn = ['midi',69, 64, 144];
 // const noteOff = [69, 127, 128];
 
 const newSequence = ({nestupSequence, ppq}) => ({
@@ -91,6 +89,7 @@ const handleClock = tick => {
          for(let i = 0; i < sequenceStep.length; i++){
             const step = sequenceStep[i];
             if(step.on === true){
+               console.log('Out');
                maxApi.outlet(noteOn);
             }
          }
@@ -122,8 +121,13 @@ const handleClock = tick => {
    commit('incCount');
 };
 
-const handlePatternChange = newPattern => {
-   console.log(`got new pattern: `, newPattern);
+const handlePatternPathChange = (...params) => {
+   // let result = '';
+   // for(let i = 0; i < arguments.length; i+=1){
+   //    if(typeof arguments[i] === 'string')
+   //       result = `${result}${arguments[i]}`;
+   // }
+   console.log(`got new pattern: `, [...params].filter(p => p !== 'text') );
 };
 
 const handleMidi = midiIn => {
@@ -139,7 +143,7 @@ const handleMidi = midiIn => {
 const handlers = {
    [MESSAGE_TYPES.MIDI_EVENT]: handleMidi,
    [MESSAGE_TYPES.EVENT_CLOCK]: handleClock,
-   [MESSAGE_TYPES.EVENT_PATTERN]: handlePatternChange
+   [MESSAGE_TYPES.EVENT_PATTERN_PATH]: handlePatternPathChange
 };
 
 maxApi.addHandlers(handlers);
