@@ -4,7 +4,7 @@ const maxApi = require('max-api');
 const { RhythmParser, Nestup, ParseError } = require('@cutelab/nestup/dist/nestup.bundle');
 const {state, commit} = require('./store');
 
-const pattern = `[5] {2}
+const PATTERN = `[5] {2}
 [3] {4}
 [5] {2}
 [3] {6
@@ -16,10 +16,9 @@ const { MESSAGE_TYPES: _MESSAGE_TYPES } = maxApi;
 const EVENT_CLOCK = 'EVENT_CLOCK';
 const MIDI_EVENT = 'MIDI_EVENT';
 const EVENT_PATTERN_PATH = 'EVENT_PATTERN_PATH';
+const EVENT_PATTERN_CHAR = 'EVENT_PATTERN_CHAR';
 
-const MIDI_BUFFER_MAX = 3;
-const midiBuffer = [];
-let lastMidiBuffer;
+const NOTE_ON = ['midi',69, 64, 144];
 
 /**
  * EVENT_ALL:'all'
@@ -36,7 +35,8 @@ const MESSAGE_TYPES = {
    }, {})),
    EVENT_CLOCK,
    MIDI_EVENT,
-   EVENT_PATTERN_PATH
+   EVENT_PATTERN_PATH,
+   EVENT_PATTERN_CHAR
 };
 
 const stop = () => {
@@ -62,8 +62,6 @@ const handleRunStateChanged = (tick) => {
    }
 };
 
-const noteOn = ['midi',69, 64, 144];
-// const noteOff = [69, 127, 128];
 
 const newSequence = ({nestupSequence, ppq}) => ({
    sequenceMax: nestupSequence.length > 0 
@@ -74,11 +72,8 @@ const newSequence = ({nestupSequence, ppq}) => ({
 });
 
 const handleClock = tick => {
-
    if([0,1].includes(tick)) return handleRunStateChanged(tick);
    if(!state.isRunning === 1) return;
-
-
 
    const elapsed = tick - state.lastTick;
    commit('elapsed', elapsed);
@@ -89,8 +84,7 @@ const handleClock = tick => {
          for(let i = 0; i < sequenceStep.length; i++){
             const step = sequenceStep[i];
             if(step.on === true){
-               console.log('Out');
-               maxApi.outlet(noteOn);
+               maxApi.outlet(NOTE_ON);
             }
          }
       }
@@ -105,7 +99,7 @@ const handleClock = tick => {
       const ppq = state.count;
       if(ppq !== state.ppq){
          try{
-            const nestup = new Nestup((new RhythmParser()).parse(pattern));
+            const nestup = new Nestup((new RhythmParser()).parse(PATTERN));
             tickLength = nestup.beatLength * ppq;
             const nestupSequence = nestup.onOffEvents(tickLength);
             commit('currentSequence', newSequence({nestupSequence, ppq}))
@@ -122,28 +116,40 @@ const handleClock = tick => {
 };
 
 const handlePatternPathChange = (...params) => {
-   // let result = '';
-   // for(let i = 0; i < arguments.length; i+=1){
-   //    if(typeof arguments[i] === 'string')
-   //       result = `${result}${arguments[i]}`;
-   // }
    console.log(`got new pattern: `, [...params].filter(p => p !== 'text') );
 };
 
-const handleMidi = midiIn => {
-   maxApi.outlet([midiIn]);
-   midiBuffer.push(midiIn);
-   if(midiBuffer.length === MIDI_BUFFER_MAX){
-      lastMidiBuffer = [...midiBuffer];
-      midiBuffer.splice(0,midiBuffer.length);
+const TAB = 9;
+const SPACE = 69;
+
+const parseResult = char => {
+   switch(char){
+      case TAB:
+         return `  `;
+      default:
+         return `${String.fromCharCode(char)}`;
    }
+};
+
+let buffer = '';
+const handleChar = char => {
+   const result = parseResult(char) || false;
+   // console.log('Handling Char input',String.fromCharCode(result[0]), char, result);
+   buffer += result;
+   maxApi.outlet(['text_char', buffer]);
+   
+};
+
+const handleMidi = midiIn => {
+   maxApi.outlet(['midi', midiIn]);
    if (MIDI_MESSAGE_MAP[midiIn]) return MIDI_MESSAGE_MAP[midiIn]();
 };
 
 const handlers = {
    [MESSAGE_TYPES.MIDI_EVENT]: handleMidi,
    [MESSAGE_TYPES.EVENT_CLOCK]: handleClock,
-   [MESSAGE_TYPES.EVENT_PATTERN_PATH]: handlePatternPathChange
+   [MESSAGE_TYPES.EVENT_PATTERN_PATH]: handlePatternPathChange,
+   [MESSAGE_TYPES.EVENT_PATTERN_CHAR]: handleChar
 };
 
 maxApi.addHandlers(handlers);
