@@ -22,6 +22,17 @@ const getters = Object.keys(state).reduce((acc, key) => ({
   [key]: state => state[key]
 }), {});
 
+const stopSequencer = state => {
+  state.lastTick = 0;
+  state.count = 0;
+  state.totalCount = 0;
+  state.elapsed = 0;
+};
+
+const startSequencer = state => {
+  state.lastTick = 0;
+};
+
 const mutations = Object.keys(state).reduce((acc, key) => ({
   ...acc,
   [key]: (state, tick) => state[key] = tick
@@ -44,11 +55,13 @@ const mutations = Object.keys(state).reduce((acc, key) => ({
     state.currentSequence.sequenceCount = newSequence.sequenceCount;
     state.currentSequence.sequenceMax = newSequence.sequenceMax;
   },
-  changeRunState: (state, isRunning) => {
+  setRunState: (state, isRunning) => {
     state.isRunning = isRunning;
     if(isRunning === 1)
-     state.lastTick = 0;
-  }
+      startSequencer(state);
+    else
+      stopSequencer(state);
+  },
 });
 
 const store = new Vuex.Store({
