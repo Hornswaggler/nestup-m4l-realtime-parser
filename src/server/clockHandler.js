@@ -11,6 +11,8 @@ const handleClock = tick => {
   const elapsed = tick - state.lastTick;
   commit('elapsed', elapsed);
 
+  // console.log('Tick');
+
   handleNextTick();
 
   if (elapsed > ONE_BEAT) {

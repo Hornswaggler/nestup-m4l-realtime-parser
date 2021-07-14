@@ -39,6 +39,7 @@ const handleNextTick = () => {
       for (let i = 0; i < sequenceStep.length; i++) {
         const step = sequenceStep[i];
         if (step.on) {
+          console.log('Bang');
           maxApi.outlet(NOTE_ON);
         }
       }
