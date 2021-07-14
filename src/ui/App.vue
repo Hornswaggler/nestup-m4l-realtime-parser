@@ -1,31 +1,58 @@
 <template>
-  <div id="app">
-    Here we go..... apiUrl:{{apiUrl}} {{number}}
+  <div id="app" style="height:100%;">
+    <div class="container" style="display:flex;align-items:center;">
+      <div style="flex:1; height:100%;">
+        <textarea v-model="pattern" style="border: solid 1px;width:100%;height:100%;"></textarea>
+      </div>
+      <div  style='flex:2;color:white;padding:10px;display:flex; justify-content:center;align-items:center;'>
+        <div>Valid! {{validPattern}}</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { RhythmParser, Nestup } from '@cutelab/nestup/dist/nestup.bundle';
+// import axios from 'axios';
 
 export default {
   name: 'App',
+  computed: {
+     validPattern() {
+      try{
+        new Nestup((new RhythmParser()).parse(this.pattern));
+        return this.pattern;
+      }catch(e){
+        console.warn('Failed to parse pattern', this.pattern);
+        return 'N/A'
+      }
+    }
+  },
+  watch: {
+    async pattern() {
+      // await axios.post('http://localhost:3000/newPattern', );
+    }
+  },
   data: () => ({
     apiUrl:'',
-    number:2
+    pattern:'',
+    lastValidPattern: {}
   }),
-  mounted(){
+  async mounted(){
     const apiUrl = process.env.VUE_APP_API_URL;
-  this.apiUrl = apiUrl;
+    this.apiUrl = apiUrl;
   }
 }
 </script>
-
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+html, body, #app{
+  height: 100%;
+  overflow: hidden;
+  background-color:black;
+}
+
+.container{
+  height: 100%;
+  width: 100%;
 }
 </style>
