@@ -13,7 +13,7 @@
 
 <script>
 import { RhythmParser, Nestup } from '@cutelab/nestup/dist/nestup.bundle';
-// import axios from 'axios';
+import axios from 'axios';
 
 export default {
   name: 'App',
@@ -21,6 +21,7 @@ export default {
      validPattern() {
       try{
         new Nestup((new RhythmParser()).parse(this.pattern));
+        console.log('Valid');
         return this.pattern;
       }catch(e){
         console.warn('Failed to parse pattern', this.pattern);
@@ -29,8 +30,15 @@ export default {
     }
   },
   watch: {
-    async pattern() {
-      // await axios.post('http://localhost:3000/newPattern', );
+    async validPattern(pattern) {
+      console.log(pattern, {pattern});
+      try{
+        console.log('pattern:', typeof pattern);
+        const result = await axios.post('http://localhost:3000/pattern', JSON.stringify({pattern}));
+        console.log('Result: ', result);
+      } catch(e) {
+        console.error('Ugh', e);
+      }
     }
   },
   data: () => ({
