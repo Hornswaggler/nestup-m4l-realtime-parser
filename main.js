@@ -1,18 +1,15 @@
 require('node-self');
-require('./src/server/server');
 
 const maxApi = require('max-api');
-const { RhythmParser, Nestup, ParseError } = require('@cutelab/nestup/dist/nestup.bundle');
-const {state, commit} = require('./src/server/store');
+const {commit} = require('./src/server/store');
 const {handleClock} = require('./src/server/clockHandler');
 
 const { MESSAGE_TYPES: _MESSAGE_TYPES } = maxApi;
 const EVENT_CLOCK = 'EVENT_CLOCK';
 const MIDI_EVENT = 'MIDI_EVENT';
+const EVENT_PORT_CHANGE = 'EVENT_PORT_CHANGE';
 const EVENT_PATTERN_PATH = 'EVENT_PATTERN_PATH';
 const EVENT_PATTERN_CHAR = 'EVENT_PATTERN_CHAR';
-
-// const NOTE_ON = ['midi',69, 64, 144];
 
 /**
  * <pre>
@@ -32,7 +29,8 @@ const MESSAGE_TYPES = {
    EVENT_CLOCK,
    MIDI_EVENT,
    EVENT_PATTERN_PATH,
-   EVENT_PATTERN_CHAR
+   EVENT_PATTERN_CHAR,
+   EVENT_PORT_CHANGE
 };
 
 const stop = () => {
@@ -78,11 +76,19 @@ const handleMidi = midiIn => {
    if (MIDI_MESSAGE_MAP[midiIn]) return MIDI_MESSAGE_MAP[midiIn]();
 };
 
+const handlePortChange = newPort => {
+   const {server} = require('./src/server/server');
+
+   console.log('received port change request', newPort);
+   server(newPort);
+};
+
 const handlers = {
    [MESSAGE_TYPES.MIDI_EVENT]: handleMidi,
    [MESSAGE_TYPES.EVENT_CLOCK]: handleClock,
    [MESSAGE_TYPES.EVENT_PATTERN_PATH]: handlePatternPathChange,
-   [MESSAGE_TYPES.EVENT_PATTERN_CHAR]: handleChar
+   [MESSAGE_TYPES.EVENT_PATTERN_CHAR]: handleChar,
+   [MESSAGE_TYPES.EVENT_PORT_CHANGE]: handlePortChange
 };
 
 maxApi.addHandlers(handlers);

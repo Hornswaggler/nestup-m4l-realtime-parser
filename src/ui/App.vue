@@ -2,10 +2,17 @@
   <div id="app" style="height:100%;">
     <div class="container" style="display:flex;align-items:center;">
       <div style="flex:1; height:100%;">
-        <textarea v-model="pattern" style="border: solid 1px;width:100%;height:100%;"></textarea>
+        <textarea 
+          v-model="pattern"
+          @blur="this.handlePatternChanged"
+          style="border: solid 1px;width:100%;height:100%;"></textarea>
       </div>
-      <div  style='flex:2;color:white;padding:10px;display:flex; justify-content:center;align-items:center;'>
-        <div>Valid! {{validPattern}}</div>
+      <div style='flex:2;color:white;padding:10px;display:flex;align-items:flex-start;display:flex;height:100%;'>
+        <span style="color:gold;margin:0 5px;">api port:</span>
+        <input ref="fred"
+          type="text"
+          v-model="apiPort"
+        />
       </div>
     </div>
   </div>
@@ -17,38 +24,39 @@ import axios from 'axios';
 
 export default {
   name: 'App',
-  computed: {
-     validPattern() {
-      try{
-        new Nestup((new RhythmParser()).parse(this.pattern));
-        console.log('Valid');
-        return this.pattern;
-      }catch(e){
-        console.warn('Failed to parse pattern', this.pattern);
-        return 'N/A'
-      }
-    }
-  },
-  watch: {
-    async validPattern(pattern) {
-      console.log(pattern, {pattern});
-      try{
-        console.log('pattern:', typeof pattern);
-        const result = await axios.post('http://localhost:3000/pattern', JSON.stringify({pattern}));
-        console.log('Result: ', result);
-      } catch(e) {
-        console.error('Ugh', e);
-      }
+  computed:{
+    apiUrl(){
+      return `http://localhost:${this.apiPort}`;
     }
   },
   data: () => ({
-    apiUrl:'',
+    apiPort:'3000',
     pattern:'',
-    lastValidPattern: {}
+    cheese: 0,
+    template:{}
   }),
-  async mounted(){
-    const apiUrl = process.env.VUE_APP_API_URL;
-    this.apiUrl = apiUrl;
+  methods: {
+    async handlePatternChanged(){
+      try{
+        new Nestup((new RhythmParser()).parse(this.pattern));
+        await axios.post(`${this.apiUrl}/pattern`, JSON.stringify({pattern: this.pattern}));
+      }catch(e){
+        console.warn('Failed to parse pattern', this.pattern);
+        return 'N/A'
+      }    },
+    handleApiChanged(){
+
+    }
+  },
+  mounted(){
+    this.$nextTick(() => {
+      setInterval(() => { 
+        console.log('fred', this.$refs);
+        this.cheese += 1;
+        this.template = this.$refs.fred.disabled;
+        }, 1000)
+    })
+
   }
 }
 </script>

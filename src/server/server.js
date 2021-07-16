@@ -16,7 +16,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(api);
+// app.use(api);
+
+app.use('/', express.static(path.join(__dirname, '../../public')));
 
 app.use((req, res, next) => {
   const err = new Error('Request Failed');
@@ -24,10 +26,15 @@ app.use((req, res, next) => {
   next(err);
 });
 
-const server = app.listen(DEFAULT_PORT, () => {
-  console.log('Listening on ' + DEFAULT_PORT);
-  maxApi.outlet(['uiRefresh']);
-});
+const server = (port = DEFAULT_PORT) => {
+  try{
+    return app.listen(port, () => {
+      console.log('Listening on ' + port);
+    });
+  } catch(e){
+    console.error('Failed to start server: ', e);
+  }
+};
 
 module.exports = {
   app,
