@@ -2,6 +2,7 @@ MTS-ESP MIDI Client MPE.amxd
 MTS-ESP MIDI Client.amxd
 *.dll
 /node_modules
+/ui/node_modules/*
 textEdit.maxpat
 /dist
 /DS_Store

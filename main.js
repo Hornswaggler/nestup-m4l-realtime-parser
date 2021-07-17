@@ -1,8 +1,8 @@
 require('node-self');
 
 const maxApi = require('max-api');
-const {commit} = require('./src/server/store');
-const {handleClock} = require('./src/server/clockHandler');
+const {commit} = require('./server/store');
+const {handleClock} = require('./server/clockHandler');
 
 const { MESSAGE_TYPES: _MESSAGE_TYPES } = maxApi;
 const EVENT_CLOCK = 'EVENT_CLOCK';

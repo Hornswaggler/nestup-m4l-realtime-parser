@@ -13,6 +13,7 @@
           type="text"
           v-model="apiPort"
         />
+        <span>{{ls}}</span>
       </div>
     </div>
   </div>
@@ -33,7 +34,8 @@ export default {
     apiPort:'3000',
     pattern:'',
     cheese: 0,
-    template:{}
+    template:{},
+    ls:'fred'
   }),
   methods: {
     async handlePatternChanged(){
@@ -54,6 +56,8 @@ export default {
         console.log('fred', this.$refs);
         this.cheese += 1;
         this.template = this.$refs.fred.disabled;
+        // window.localStorage.setItem('myCat', 'TommyTheCatIsMyName');
+        this.ls = localStorage.getItem('myCat');
         }, 1000)
     })
 
