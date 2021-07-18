@@ -15,14 +15,20 @@ const PATTERN = `[5] {2}
 }`;
 
 const initialState = () => ({
+  //clock
   ppq: 0,
   lastTick: 0,
   count: DEFAULT_COUNT,
   totalCount: DEFAULT_COUNT,
   elapsed: 0,
   isRunning: 0,
+
+  //sequencer
   currentSequence: {nestupSequence: [], sequenceCount:0, sequenceMax: 0},
-  pattern: PATTERN
+  pattern: PATTERN,
+
+  //server
+  port: 1337
 });
 
 const state = initialState();

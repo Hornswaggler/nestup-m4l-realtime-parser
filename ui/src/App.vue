@@ -13,7 +13,7 @@
           type="text"
           v-model="apiPort"
         />
-        <span>{{ls}}</span>
+        <span>{{id}}</span>
       </div>
     </div>
   </div>
@@ -35,7 +35,7 @@ export default {
     pattern:'',
     cheese: 0,
     template:{},
-    ls:'fred'
+    id:0
   }),
   methods: {
     async handlePatternChanged(){
@@ -51,15 +51,10 @@ export default {
     }
   },
   mounted(){
-    this.$nextTick(() => {
-      setInterval(() => { 
-        console.log('fred', this.$refs);
-        this.cheese += 1;
-        this.template = this.$refs.fred.disabled;
-        // window.localStorage.setItem('myCat', 'TommyTheCatIsMyName');
-        this.ls = localStorage.getItem('myCat');
-        }, 1000)
-    })
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const params = Object.fromEntries(urlSearchParams.entries());
+    const {id} = params;
+    this.id = id;
 
   }
 }

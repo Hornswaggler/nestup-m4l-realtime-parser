@@ -1,7 +1,5 @@
 const { state, commit, dispatch } = require('./store');
-const maxApi = require('max-api');
-const {handleNextTick, handleTempoChange} = require('./sequencer');
-const store = require('./store');
+const {handleNextTick} = require('./sequencer');
 
 const ONE_BEAT = 1;
 
@@ -17,7 +15,7 @@ const handleClock = tick => {
   if (elapsed > ONE_BEAT) {
     const ppq = state.count;
     if (ppq !== state.ppq) {
-      store.dispatch('changeTempo', ppq);
+      dispatch('changeTempo', ppq);
     }
 
     commit('ppq', ppq);

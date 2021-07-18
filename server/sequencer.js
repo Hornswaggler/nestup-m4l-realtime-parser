@@ -1,8 +1,7 @@
 const { state, commit } = require('./store');
-const maxApi = require('max-api');
+const {sendMidi} = require('./maxInterface');
 
-// TODO: Refactor and add command prefix automatically
-const NOTE_ON = ['midi', 69, 64, 144];
+const NOTE_ON = [69, 64, 144];
 
 const handleNextTick = () => {
   if (state.currentSequence.nestupSequence.length > 0) {
@@ -11,7 +10,7 @@ const handleNextTick = () => {
       for (let i = 0; i < sequenceStep.length; i++) {
         const step = sequenceStep[i];
         if (step.on) {
-          maxApi.outlet(NOTE_ON);
+          sendMidi(NOTE_ON);
         }
       }
     }

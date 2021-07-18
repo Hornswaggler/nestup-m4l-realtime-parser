@@ -3,9 +3,6 @@ const express = require('express');
 var cors = require('cors')
 const path = require('path');
 const api = require('./api');
-const maxApi = require('max-api');
-
-const DEFAULT_PORT = '3000';
 
 var app = express();
 
@@ -18,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // app.use(api);
 
-app.use('/', express.static(path.join(__dirname, '../../public')));
+app.use('/', express.static(path.join(__dirname, '../public')));
 
 app.use((req, res, next) => {
   const err = new Error('Request Failed');
@@ -26,11 +23,12 @@ app.use((req, res, next) => {
   next(err);
 });
 
-const server = (port = DEFAULT_PORT) => {
+const startServer = () => {
   try{
-    return app.listen(port, () => {
-      console.log('Listening on ' + port);
+    const server = app.listen(0, () => {
+      console.log('Listening on ', server.address().port);
     });
+    return server;
   } catch(e){
     console.error('Failed to start server: ', e);
   }
@@ -38,5 +36,5 @@ const server = (port = DEFAULT_PORT) => {
 
 module.exports = {
   app,
-  server
+  startServer
 };
