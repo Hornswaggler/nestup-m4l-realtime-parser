@@ -3,9 +3,10 @@ const MAX_RENDER = 'onrender';
 const MAX_MIDI = 'onmidi';
 const MAX_LOADED = 'onloaded';
 
-const PATCHING_RECTANGLE = '812.6 271. 326. 203.';
+const PATCHING_RECTANGLE = '20.6 4. 930. 167.';
+const PRESENTATION_RECTANGLE = '0. 0. 930. 167.';
 
-const getNewViewport = ({port, id}) => `script newdefault ui 677 289 jweb @rendermode 1 @presentation 1 @presentation_rect 9. 5. 369. 154.901961 23. 417. 326. 203. @url http://localhost:${port}/?id=${id} @patching_rect ${PATCHING_RECTANGLE}`;
+const getNewViewport = ({port, id}) => `script newdefault ui 677 289 jweb @rendermode 1 @presentation 1 @presentation_rect ${PRESENTATION_RECTANGLE} @url http://localhost:${port}/?id=${id} @patching_rect ${PATCHING_RECTANGLE}`;
 
 const render = ({port, id}) => {
   console.log(`Loading ui for deviceId: ${id} port: ${port}`);
