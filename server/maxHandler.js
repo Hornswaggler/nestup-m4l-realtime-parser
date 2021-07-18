@@ -45,8 +45,7 @@ const handleOnLoad = id => {
 
   console.log('Loaded', {port, id});
 
-  // render({port, id});
-  render({port: 8080, id});
+  render({port, id});
 }
 
 const handlers = {

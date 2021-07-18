@@ -1,62 +1,7 @@
 <template>
-  <!-- <div id="app" style="height:100%;">
-    <div class="container" style="display:flex;align-items:center;">
-      <div style="flex:1; height:100%;">
-        <textarea 
-          v-model="pattern"
-          @blur="this.handlePatternChanged"
-          style="border: solid 1px;width:100%;height:100%;"></textarea>
-      </div>
-      <div style='flex:2;color:white;padding:10px;display:flex;align-items:flex-start;display:flex;height:100%;'>
-        <span style="color:gold;margin:0 5px;">api port:</span>
-        <input ref="fred"
-          type="text"
-          v-model="apiPort"
-        />
-        <span>{{id}}</span>
-      </div>
-    </div>
-  </div> -->
   <v-app>
-    <!-- <v-app-bar
-      app
-      color="primary"
-      dark
-    >
-      <div class="d-flex align-center">
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
-
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
-      </div>
-
-      <v-spacer></v-spacer>
-
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
-    </v-app-bar> -->
-
     <v-main>
-      <HelloWorld/>
+      <Layout :port="port" :id="id" :apiPort="apiPort"/>
     </v-main>
   </v-app>
 </template>
@@ -64,22 +9,21 @@
 <script>
 import { RhythmParser, Nestup } from '@cutelab/nestup/dist/nestup.bundle';
 import axios from 'axios';
-import HelloWorld from './components/HelloWorld'
+import Layout from './components/Layout'
 
 export default {
   name: 'App',
-  components: {HelloWorld},
+  components: {Layout},
   computed:{
     apiUrl(){
       return `http://localhost:${this.apiPort}`;
     }
   },
   data: () => ({
-    apiPort:'3000',
+    apiPort:'8080',
     pattern:'',
-    cheese: 0,
-    template:{},
-    id:0
+    id:0,
+    port:0
   }),
   methods: {
     async handlePatternChanged(){
@@ -89,22 +33,39 @@ export default {
       }catch(e){
         console.warn('Failed to parse pattern', this.pattern);
         return 'N/A'
-      }    },
-    handleApiChanged(){
-
+      }    
     }
   },
   mounted(){
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
-    const {id} = params;
+    const {id, port} = params;
     this.id = id;
-
+    this.port = port;
+    console.log(this.id, this.port, this.apiPort);
   }
 }
 </script>
 <style lang="scss">
-html {
-  overflow:hidden
+html, body {
+  overflow:hidden;
+  padding:0;
+}
+body{
+  margin-top:0px;
+}
+
+.v-textarea textarea {
+  line-height: 0.75rem;
+  font-size: 0.75rem;
+  height:80vh;
+  width: 100%;
+}
+
+@media (min-width: 1264px){
+  .container {
+      max-width: initial;
+      padding: 0;
+  }
 }
 </style>
