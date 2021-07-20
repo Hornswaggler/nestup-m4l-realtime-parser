@@ -2,7 +2,6 @@ const Vue = require('vue');
 const Vuex = require('vuex');
 const { RhythmParser, Nestup } = require('@cutelab/nestup/dist/nestup.bundle');
 
-
 Vue.use(Vuex);
 
 const DEFAULT_COUNT = 0;
@@ -14,6 +13,8 @@ const PATTERN = `[5] {2}
  5:2 {1}
 }`;
 
+const emptySequence = () => ({ nestupSequence: [], sequenceCount:0, sequenceMax: 0});
+
 const initialState = () => ({
   //clock
   ppq: 0,
@@ -24,7 +25,8 @@ const initialState = () => ({
   isRunning: 0,
 
   //sequencer
-  currentSequence: {nestupSequence: [], sequenceCount:0, sequenceMax: 0},
+  currentSequence: emptySequence(),
+  nextSequence: emptySequence(), 
   pattern: PATTERN,
 
   //server
@@ -33,10 +35,12 @@ const initialState = () => ({
 
 const state = initialState();
 
-const getters = Object.keys(state).reduce((acc, key) => ({
-  ...acc,
-  [key]: state => state[key]
-}), {});
+const getters = {
+  ...Object.keys(state).reduce((acc, key) => ({
+    ...acc,
+    [key]: state => state[key]
+  }), {}),
+}
 
 const newSequence = ({ nestupSequence, ppq }) => ({
   sequenceMax: nestupSequence.length > 0
@@ -53,13 +57,20 @@ const tryParsePattern = ({pattern, ppq}) => {
 }
 
 const actions = {
-  changePattern: ({commit, state}, pattern) => {
+  queuePattern: ({commit, state}, pattern) => {
     try{
       const newSequence = tryParsePattern({pattern, ppq: state.ppq});
-      commit('currentSequence', newSequence);
+      commit('nextSequence', newSequence);
     }catch {
       console.error('Failed to change pattern', e);
     }
+  },
+  playNextSequence: ({commit, state, dispatch}) => {
+    if(state.nextSequence.nestupSequence.length > 0){
+      commit('currentSequence', state.nextSequence);
+      dispatch('clearNextSequence');
+    }
+    commit('setSequenceCount', 0);
   },
   changeTempo: ({commit, state}, ppq) => {
     try{
@@ -68,6 +79,9 @@ const actions = {
     } catch (e) {
       console.error('Failed to parse pattern for tempo change', e);
     }
+  },
+  clearNextSequence:({commit}) => {
+    commit('nextSequence', emptySequence());
   }
 };
 
@@ -104,6 +118,11 @@ const mutations = {
     state.currentSequence.sequenceCount = sequenceCount;
   },
   setCurrentSequence: (state, newSequence) => {
+    state.currentSequence.nestupSequence = newSequence.nestupSequence;
+    state.currentSequence.sequenceCount = newSequence.sequenceCount;
+    state.currentSequence.sequenceMax = newSequence.sequenceMax;
+  },
+  setNextSequence: (state, newSequence) => {
     state.currentSequence.nestupSequence = newSequence.nestupSequence;
     state.currentSequence.sequenceCount = newSequence.sequenceCount;
     state.currentSequence.sequenceMax = newSequence.sequenceMax;

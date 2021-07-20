@@ -1,4 +1,4 @@
-const { state, commit } = require('./store');
+const { state, commit, dispatch } = require('./store');
 const {sendMidi} = require('./maxInterface');
 
 const NOTE_ON = [69, 64, 144];
@@ -15,7 +15,8 @@ const handleNextTick = () => {
       }
     }
     if (state.currentSequence.sequenceCount > state.currentSequence.sequenceMax) {
-      commit('setSequenceCount', 0);
+      dispatch('playNextSequence');
+
     } else {
       commit('incSequenceCount');
     }
