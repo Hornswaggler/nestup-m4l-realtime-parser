@@ -83,10 +83,13 @@ const startSequencer = state => {
 };
 
 
-const mutations = Object.keys(state).reduce((acc, key) => ({
-  ...acc,
-  [key]: (state, tick) => state[key] = tick
-}), {
+const mutations = {
+  ...Object.keys(state)
+    .reduce((acc, key) => ({
+      ...acc,
+      [key]: (state, tick) => state[key] = tick
+    }), {}
+  ),
   resetCount: state => { 
     state.count = DEFAULT_COUNT;
   },
@@ -112,7 +115,7 @@ const mutations = Object.keys(state).reduce((acc, key) => ({
     else
       stopSequencer(state);
   },
-});
+};
 
 const store = new Vuex.Store({
   state: initialState(),

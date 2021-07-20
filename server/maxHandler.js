@@ -42,9 +42,6 @@ const handleMidi = midi => {
 const handleOnLoad = id => {
   const server = startServer();
   const port = server.address().port;
-
-  console.log('Loaded', {port, id});
-
   render({port, id});
 }
 
