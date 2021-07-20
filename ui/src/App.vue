@@ -7,8 +7,6 @@
 </template>
 
 <script>
-// import { RhythmParser, Nestup } from '@cutelab/nestup/dist/nestup.bundle';
-// import axios from 'axios';
 import Layout from './components/Layout'
 
 export default {
