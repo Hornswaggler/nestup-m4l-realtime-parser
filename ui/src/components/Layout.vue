@@ -67,15 +67,16 @@
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { RhythmParser, Nestup } from '@cutelab/nestup/dist/nestup.bundle';
-import axios from 'axios';
+// import axios from 'axios';
 
 export default {
   name: 'Layout',
   data: () => ({
+    socketLoaded:false,
     isLoaded: false,
-    // log:'',
+    socket:{},
     editorPattern: '',
-    selectedPattern: 0
+    selectedPattern: 0,
   }),
   computed:{
     ...mapState(['pattern', 'id', 'port', 'storedPatterns', 'newPatternStore', 'log', 'loaded']),
@@ -95,7 +96,9 @@ export default {
   methods: {
     ...mapActions(['consoleOut']),
     tryPattern(newPattern){
-      const {apiUrl, consoleOut} = this;
+      const {consoleOut} = this;
+      const vm = this;
+
       try{
         new Nestup((new RhythmParser()).parse(newPattern));
       }catch{
@@ -104,7 +107,28 @@ export default {
 
       try{
         consoleOut(`Pattern Queued: ${newPattern}`);
-        axios.post(`${apiUrl}/pattern`, JSON.stringify({pattern: newPattern})); 
+        
+        if(!this.socketLoaded) {
+          this.socket = new WebSocket(`ws://localhost:${this.port}/`);
+
+          this.socket.onopen = () => this.socket.send(JSON.stringify({pattern: newPattern}));
+          this.socket.onmessage = ({data}) => {
+            console.log(data);
+            if(data==='something')return;
+            vm.selectedPattern = 
+              vm.selectedPattern + 1 >= vm.patternCollection.length
+                ? 0 
+                : vm.selectedPattern + 1;
+
+            consoleOut(data);
+            this.socketLoaded = true;
+            this.$nextTick(() => {
+              this.socket.send(JSON.stringify({pattern: this.editorPattern}));
+            });
+          }
+        }
+
+        // axios.post(`${apiUrl}/pattern`, JSON.stringify({pattern: newPattern})); 
       } catch(e) {
         //Consume
       }
@@ -117,6 +141,12 @@ export default {
       this.$store.dispatch('clearLog');
       this.$store.commit('loaded', true);
       this.consoleOut('Ready...');
+
+
+
+
+
+
 
     });
   }

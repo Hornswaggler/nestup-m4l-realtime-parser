@@ -2,11 +2,14 @@ const maxApi = require('max-api');
 const {handleClock} = require('./clockHandler');
 const {commit} = require('./store');
 const {sendMidi, render} = require('./maxInterface');
-const {startServer} = require('./server');
+const {startServer} = require('./wsServer');
+// const {startServer} = require('./server');
+let _socket = {};
 
 const EVENT_CLOCK = 'EVENT_CLOCK';
 const EVENT_MIDI = 'EVENT_MIDI';
 const EVENT_LOADED = 'EVENT_LOADED';
+const EVENT_DIAL = 'EVENT_DIAL';
 
 
 const MESSAGE_TYPES = {
@@ -16,7 +19,8 @@ const MESSAGE_TYPES = {
   }, {})),
   EVENT_CLOCK,
   EVENT_MIDI,
-  EVENT_LOADED
+  EVENT_LOADED,
+  EVENT_DIAL
 };
 
 
@@ -39,16 +43,31 @@ const handleMidi = midi => {
   if (MIDI_MESSAGE_MAP[midi]) return MIDI_MESSAGE_MAP[midi]();
 };
 
-const handleOnLoad = id => {
-  const server = startServer();
-  const port = server.address().port;
+let lastConnection = null;
+const handleOnLoad = async id => {
+  const {port} = await startServer((payload, ws) => {
+    console.log('Received: value', payload);
+    lastConnection = ws;
+  });
   render({port, id});
 }
+
+const handleDialChanged = dial => {
+  console.log('Dial Changed: ', dial, _socket);
+  if(lastConnection){
+    console.log('Sending');
+    lastConnection.send(JSON.stringify({dial}));
+  }
+}
+
+
+
 
 const handlers = {
   [MESSAGE_TYPES.EVENT_MIDI]: handleMidi,
   [MESSAGE_TYPES.EVENT_CLOCK]: handleClock,
-  [MESSAGE_TYPES.EVENT_LOADED]: handleOnLoad
+  [MESSAGE_TYPES.EVENT_LOADED]: handleOnLoad,
+  [MESSAGE_TYPES.EVENT_DIAL]: handleDialChanged
 };
 
 maxApi.addHandlers(handlers);

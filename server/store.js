@@ -59,6 +59,7 @@ const tryParsePattern = ({pattern, ppq}) => {
 const actions = {
   queuePattern: ({commit, state}, pattern) => {
     try{
+      console.log(`Queueing new pattern: ${pattern}`);
       const newSequence = tryParsePattern({pattern, ppq: state.ppq});
       commit('nextSequence', newSequence);
     }catch {
