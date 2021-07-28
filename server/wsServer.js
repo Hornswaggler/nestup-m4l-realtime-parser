@@ -36,9 +36,11 @@ const handlers = {
 }
 
 const socket = {};
+const clients = [];
+
 const startServer = async (callback) => {
   try {
-    let port = 8080;
+    let port = 4200;
     let foundPort = false;
     while (!foundPort) {
       try{
@@ -58,10 +60,9 @@ const startServer = async (callback) => {
       const result = new Promise((resolve, reject) => {
         const wss = new Server({ port });
         wss.on('connection', function connection(ws) {
-          Object.assign(socket, ws);
-          ws.send('something');
-          
-          ws.on('message', function incoming(message) {
+          clients.push(ws);
+
+          ws.on('message', message => {
             try{
               const payload = JSON.parse(message);
               Object.keys(payload).map(key => {
@@ -75,13 +76,12 @@ const startServer = async (callback) => {
             }
           });
         });
-        return resolve()
+        return resolve();
       });
       return result;
     };
 
-    const ws = await connect();
-    console.log('ws',ws);
+    await connect();
     
     console.log(`Websockets initialized on port: ${port}`);
     return {port};
@@ -90,7 +90,17 @@ const startServer = async (callback) => {
   }
 };
 
+const sendAll = message => {
+  clients.map(ws => {
+    try{
+      ws.send(message);
+    }catch(e){
+      console.error('Failed to send to client:', e);
+    }
+  })
+}
+
 module.exports = {
   startServer,
-  socket
+  sendAll
 };

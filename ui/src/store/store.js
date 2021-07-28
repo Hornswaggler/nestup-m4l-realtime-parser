@@ -4,7 +4,7 @@ import defaultPatterns from '../assets/patterns';
 
 Vue.use(Vuex);
 
-const MAX_LOG = 5000;
+// const MAX_LOG = 5000000;
 
 // const {localStorage, location:{href}} = window;
 // const {port} = new URL(href);
@@ -12,6 +12,7 @@ const MAX_LOG = 5000;
 const extractParamsFromUrl = () => {
   const urlSearchParams = new URLSearchParams(window.location.search);
   const params = Object.fromEntries(urlSearchParams.entries());
+  console.log('Params:', params);
   return params;
 };
 
@@ -23,6 +24,8 @@ const primitives = {
   log: ''
 };
 
+const localStorageExclude = ['log'];
+
 const initialState = () => ({
   ...primitives,
   storedPatterns: Object.values(defaultPatterns).reduce((acc, pattern, id) => ({
@@ -33,10 +36,12 @@ const initialState = () => ({
 });
 
 
-const persistStateToLocalStorage = ({key, payload}) => {
-  const urlSearchParams = new URLSearchParams(window.location.search);
-  const params = Object.fromEntries(urlSearchParams.entries());
-  const {id} = params;
+const persistStateToLocalStorage = ({id, key, payload}) => {
+  // const urlSearchParams = new URLSearchParams(window.location.search);
+  // const params = Object.fromEntries(urlSearchParams.entries());
+  // const {id} = params;
+
+  console.log(`Persisting ${key}: ${payload}, at ${id}`);
 
   let persistedStore = {};
   try{
@@ -50,7 +55,9 @@ const persistStateToLocalStorage = ({key, payload}) => {
 };
 
 const actions = {
-  loadStateFromLocalStorage({commit, state}){
+  loadStateFromLocalStorage({commit, state, dispatch}){
+    dispatch('consoleOut', `Port is ${state.port}`);
+
     try{
       const persistedStore = JSON.parse(localStorage[state.id]);
       Object.keys(persistedStore).map(key => commit(key, persistedStore[key]));
@@ -61,9 +68,9 @@ const actions = {
   clearLog({commit}){
     commit('log', '');
   },
-  consoleOut({commit, state, dispatch}, message = ''){
-    if((state.log.length + message.length) >= MAX_LOG) dispatch('clearLog');
-    commit('log',`${message}\n${state.log}`);
+  consoleOut({commit, state}, message = ''){
+    // if((state.log.length + message.length) >= MAX_LOG) dispatch('clearLog');
+    commit('log',`${new Date().toLocaleString()} - ${message}\n${state.log}`);
   }
 }
 
@@ -84,7 +91,7 @@ const mutations = {
   ...acc,
     [key]: (state, payload) => { 
       state[key] = payload; 
-      state.loaded && persistStateToLocalStorage({key, payload}); 
+      state.loaded && !localStorageExclude.includes(key) && persistStateToLocalStorage({id: state.id, key, payload}); 
       return state;
     }
   }), {})

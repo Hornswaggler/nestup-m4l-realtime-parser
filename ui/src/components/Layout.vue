@@ -56,7 +56,7 @@
             max-width="400"
             style="text-align:left;height:89vh;overflow:auto;color:grey"
           >
-            <p style='white-space: pre;'>{{log}}</p>
+            <p style='white-space: pre;font-size:10px;'>{{log}}</p>
           </v-card>
       </v-col>
 
@@ -67,16 +67,15 @@
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { RhythmParser, Nestup } from '@cutelab/nestup/dist/nestup.bundle';
-// import axios from 'axios';
 
 export default {
   name: 'Layout',
   data: () => ({
-    socketLoaded:false,
-    isLoaded: false,
-    socket:{},
+    dial: 0,
+    socket:{send: () => {}, onerror: () =>{}, onmessage: ()=>{}},
     editorPattern: '',
     selectedPattern: 0,
+    messagequeue:[]
   }),
   computed:{
     ...mapState(['pattern', 'id', 'port', 'storedPatterns', 'newPatternStore', 'log', 'loaded']),
@@ -95,9 +94,46 @@ export default {
   },
   methods: {
     ...mapActions(['consoleOut']),
+    connect(){
+      this.socket = new WebSocket(`ws://localhost:${this.port}/`);
+
+      this.socket.onerror = e => {
+        console.log('hi');
+        console.log(e);
+      };
+
+      this.socket.onopen = () => {
+        this.$store.commit('loaded', true);
+        this.sendPending();
+      };
+
+      this.socket.onmessage = ({data}) => {
+        this.consoleOut(`Received: ${data}`);
+      };
+      
+    },
+    sendPending(){
+      this.messagequeue.map(message =>{
+        this.socket.send(JSON.stringify(message));
+      });
+      this.messagequeue = [];
+    },
+    send(data){
+      const READY_STATE = {
+        CONNECTED: 1
+      };
+
+      if(this.socket.readyState === READY_STATE.CONNECTED){
+        this.sendPending();
+        this.socket.send(JSON.stringify(data));
+      } else {
+        this.$store.commit('loaded', false);
+        this.messagequeue.push(data);
+        this.connect();
+      }
+    },
     tryPattern(newPattern){
       const {consoleOut} = this;
-      const vm = this;
 
       try{
         new Nestup((new RhythmParser()).parse(newPattern));
@@ -107,48 +143,18 @@ export default {
 
       try{
         consoleOut(`Pattern Queued: ${newPattern}`);
-        
-        if(!this.socketLoaded) {
-          this.socket = new WebSocket(`ws://localhost:${this.port}/`);
-
-          this.socket.onopen = () => this.socket.send(JSON.stringify({pattern: newPattern}));
-          this.socket.onmessage = ({data}) => {
-            console.log(data);
-            if(data==='something')return;
-            vm.selectedPattern = 
-              vm.selectedPattern + 1 >= vm.patternCollection.length
-                ? 0 
-                : vm.selectedPattern + 1;
-
-            consoleOut(data);
-            this.socketLoaded = true;
-            this.$nextTick(() => {
-              this.socket.send(JSON.stringify({pattern: this.editorPattern}));
-            });
-          }
-        }
-
-        // axios.post(`${apiUrl}/pattern`, JSON.stringify({pattern: newPattern})); 
+        this.send({pattern: this.editorPattern});
       } catch(e) {
         //Consume
+        console.error(e);
       }
     }
   },
   mounted() {
+    localStorage.clear();
     this.$store.dispatch('loadStateFromLocalStorage');
     this.editorPattern = this.pattern;
-    this.$nextTick(() => {
-      this.$store.dispatch('clearLog');
-      this.$store.commit('loaded', true);
-      this.consoleOut('Ready...');
-
-
-
-
-
-
-
-    });
+    this.connect();
   }
 }
 </script>
