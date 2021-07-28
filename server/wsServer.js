@@ -38,7 +38,7 @@ const handlers = {
 const socket = {};
 const clients = [];
 
-const startServer = async (callback) => {
+const startServer = async () => {
   try {
     let port = 4200;
     let foundPort = false;
@@ -69,7 +69,6 @@ const startServer = async (callback) => {
                 if(!handlers[key]) throw new Error(`Could not find handler: ${key}`);
                 handlers[key](payload[key]);
               });
-              callback(payload, ws);
             } catch(e) {
               console.error(e);
               reject(e);

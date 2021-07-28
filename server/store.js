@@ -27,7 +27,7 @@ const initialState = () => ({
   //sequencer
   currentSequence: emptySequence(),
   nextSequence: emptySequence(), 
-  pattern: PATTERN,
+  pattern: '',
 
   //server
   port: 1337
@@ -59,9 +59,12 @@ const tryParsePattern = ({pattern, ppq}) => {
 const actions = {
   queuePattern: ({commit, state}, pattern) => {
     try{
-      console.log(`Queueing new pattern: ${pattern}`);
+      console.log(`Queueing new pattern: ${pattern} : ${pattern === state.pattern}`);
+      if(pattern === state.pattern) return;
+
       const newSequence = tryParsePattern({pattern, ppq: state.ppq});
       commit('nextSequence', newSequence);
+      commit('pattern', pattern)
     }catch {
       console.error('Failed to change pattern', e);
     }
@@ -117,16 +120,6 @@ const mutations = {
   },
   setSequenceCount: (state, sequenceCount) => {
     state.currentSequence.sequenceCount = sequenceCount;
-  },
-  setCurrentSequence: (state, newSequence) => {
-    state.currentSequence.nestupSequence = newSequence.nestupSequence;
-    state.currentSequence.sequenceCount = newSequence.sequenceCount;
-    state.currentSequence.sequenceMax = newSequence.sequenceMax;
-  },
-  setNextSequence: (state, newSequence) => {
-    state.currentSequence.nestupSequence = newSequence.nestupSequence;
-    state.currentSequence.sequenceCount = newSequence.sequenceCount;
-    state.currentSequence.sequenceMax = newSequence.sequenceMax;
   },
   setRunState: (state, isRunning) => {
     state.isRunning = isRunning;

@@ -1,9 +1,8 @@
 const maxApi = require('max-api');
 const {handleClock} = require('./clockHandler');
-const {commit} = require('./store');
+const {commit, state} = require('./store');
 const {sendMidi, render} = require('./maxInterface');
 const {startServer, sendAll} = require('./wsServer');
-// const {startServer} = require('./server');
 let _socket = {};
 
 const EVENT_CLOCK = 'EVENT_CLOCK';
@@ -44,9 +43,8 @@ const handleMidi = midi => {
 };
 
 const handleOnLoad = async id => {
-  const {port} = await startServer((payload, ws) => {
-    console.log('Received: value', payload);
-  });
+  const {port} = await startServer();
+  sendAll({pattern: state.pattern});
   render({port, id});
 }
 

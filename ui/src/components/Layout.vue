@@ -74,7 +74,7 @@ export default {
     dial: 0,
     socket:{send: () => {}, onerror: () =>{}, onmessage: ()=>{}},
     editorPattern: '',
-    selectedPattern: 0,
+    selectedPattern: -1,
     messagequeue:[]
   }),
   computed:{
@@ -86,6 +86,7 @@ export default {
       const {$store:{commit}, tryPattern} = this;
       commit('pattern', newPattern); 
 
+      this.consoleOut(JSON.stringify(this.loaded));
       if(this.loaded) tryPattern(newPattern);
     },
     selectedPattern(newPattern){
@@ -98,8 +99,7 @@ export default {
       this.socket = new WebSocket(`ws://localhost:${this.port}/`);
 
       this.socket.onerror = e => {
-        console.log('hi');
-        console.log(e);
+        console.error(e);
       };
 
       this.socket.onopen = () => {
@@ -151,9 +151,11 @@ export default {
     }
   },
   mounted() {
-    localStorage.clear();
+    // localStorage.clear();
     this.$store.dispatch('loadStateFromLocalStorage');
     this.editorPattern = this.pattern;
+    console.log('Mounted', this.pattern, this.patternCollection.findIndex(({pattern}) => pattern === this.pattern));
+    this.selectedPattern = this.patternCollection.findIndex(({pattern}) => pattern===this.pattern);
     this.connect();
   }
 }
