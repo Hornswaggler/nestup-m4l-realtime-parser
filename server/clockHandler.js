@@ -4,7 +4,7 @@ const {handleNextTick} = require('./sequencer');
 const ONE_BEAT = 1;
 
 const handleClock = tick => {
-  if ([0, 1].includes(tick) && state.isRunning !== tick) return commit('setRunState', tick);
+  if ([0, 1].includes(tick) && state.isRunning !== tick) return dispatch('changeRunState', tick);
   if (!state.isRunning === 1) return;
 
   const elapsed = tick - state.lastTick;

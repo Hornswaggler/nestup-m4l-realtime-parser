@@ -1,9 +1,8 @@
 const maxApi = require('max-api');
 const {handleClock} = require('./clockHandler');
-const {commit, state} = require('./store');
-const {sendMidi, render} = require('./maxInterface');
+const {state} = require('./store');
+const {render} = require('./maxInterface');
 const {startServer, sendAll} = require('./wsServer');
-let _socket = {};
 
 const EVENT_CLOCK = 'EVENT_CLOCK';
 const EVENT_MIDI = 'EVENT_MIDI';
@@ -23,23 +22,26 @@ const MESSAGE_TYPES = {
 };
 
 
-const stop = () => {
-  commit('lastTick', 0);
-  commit('count', -1);
-  commit('totalCount', 0);
-  commit('elapsed', 0);
-};
+// const stop = () => {
+//   // consol
+//   // commit('lastTick', 0);
+//   // commit('count', -1);
+//   // commit('totalCount', 0);
+//   // commit('elapsed', 0);
+// };
 
-const noteEnd = () => {};
+// const noteEnd = () => {};
 
-const MIDI_MESSAGE_MAP = {
-  128: noteEnd,
-  0: stop
-};
+// const MIDI_MESSAGE_MAP = {
+//   128: noteEnd,
+//   0: stop
+// };
 
 const handleMidi = midi => {
-  sendMidi([midi]);
-  if (MIDI_MESSAGE_MAP[midi]) return MIDI_MESSAGE_MAP[midi]();
+  console.log('Inbound Midi: ', midi);
+  //TODO: DO NOT SEND 0 to Ableton... goofs up start / stop :(
+  // sendMidi([midi]);
+  // if (MIDI_MESSAGE_MAP[midi]) return MIDI_MESSAGE_MAP[midi]();
 };
 
 const handleOnLoad = async id => {

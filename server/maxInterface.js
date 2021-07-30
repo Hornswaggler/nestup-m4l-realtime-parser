@@ -15,7 +15,9 @@ const render = ({port, id}) => {
   maxApi.outlet([MAX_RENDER, getNewViewport({port, id})]);
 };
 
-const sendMidi = midi => maxApi.outlet([MAX_MIDI, ...midi]);
+const sendMidi = midi => {
+  maxApi.outlet([MAX_MIDI, ...midi]);
+}
 
 const sendOnLoad = () => maxApi.outlet([MAX_LOADED]);
 

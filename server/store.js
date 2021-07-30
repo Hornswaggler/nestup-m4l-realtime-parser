@@ -5,13 +5,6 @@ const { RhythmParser, Nestup } = require('@cutelab/nestup/dist/nestup.bundle');
 Vue.use(Vuex);
 
 const DEFAULT_COUNT = 0;
-const PATTERN = `[5] {2}
-[3] {4}
-[5] {2}
-[3] {6
- 1:2 {3}
- 5:2 {1}
-}`;
 
 const emptySequence = () => ({ nestupSequence: [], sequenceCount:0, sequenceMax: 0});
 
@@ -63,7 +56,7 @@ const actions = {
       if(pattern === state.pattern) return;
 
       const newSequence = tryParsePattern({pattern, ppq: state.ppq});
-      commit('nextSequence', newSequence);
+      commit(state.currentSequence.nestupSequence.length === 0 ? 'currentSequence' : 'nextSequence', newSequence);
       commit('pattern', pattern)
     }catch {
       console.error('Failed to change pattern', e);
@@ -86,20 +79,33 @@ const actions = {
   },
   clearNextSequence:({commit}) => {
     commit('nextSequence', emptySequence());
+  },
+  changeRunState: ({commit, dispatch}, isRunning) => {
+    commit('isRunning', isRunning);
+    if(isRunning === 1){
+      console.log('Starting Sequencer');
+      dispatch('startSequencer');
+    } else {
+      console.log('Stopping Sequencer');
+      dispatch('stopSequencer');
+    }
+  },
+  stopSequencer: ({commit, dispatch}) => {
+    commit('lastTick', 0);
+    commit('count', 0);
+    commit('totalCount', 0);
+    commit('elapsed', 0);
+    dispatch('clearNextSequence');
+  },
+  startSequencer: ({commit, dispatch, state}) => {
+    commit('count', -1);
+    commit('totalCount', 0);
+    commit('elapsed', 0);
+    commit('lastTick', 0);
+
+    dispatch('playNextSequence');
   }
 };
-
-const stopSequencer = state => {
-  state.lastTick = 0;
-  state.count = 0;
-  state.totalCount = 0;
-  state.elapsed = 0;
-};
-
-const startSequencer = state => {
-  state.lastTick = 0;
-};
-
 
 const mutations = {
   ...Object.keys(state)
@@ -120,14 +126,7 @@ const mutations = {
   },
   setSequenceCount: (state, sequenceCount) => {
     state.currentSequence.sequenceCount = sequenceCount;
-  },
-  setRunState: (state, isRunning) => {
-    state.isRunning = isRunning;
-    if(isRunning === 1)
-      startSequencer(state);
-    else
-      stopSequencer(state);
-  },
+  }
 };
 
 const store = new Vuex.Store({
