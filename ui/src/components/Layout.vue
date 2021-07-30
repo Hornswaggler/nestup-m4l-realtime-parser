@@ -21,6 +21,7 @@
           color="secondary"
           x-small
           style='color:black;margin-top:12px'
+          @click="handleStorePattern"
         >Store =></v-btn>
       </v-col>
 
@@ -29,7 +30,7 @@
           <v-list
             dense
             outlined
-            style='height: 89vh'
+            style='height: 89vh;overflow:auto'
           >
             <v-list-item-group
               v-model="selectedPattern"
@@ -38,12 +39,24 @@
               <v-list-item
                 v-for="(storedPattern) in patternCollection"
                 :key="storedPattern.id"
+                style="text-align:left;"
               >
                 <v-list-item-content>
                   <v-list-item-title 
                     v-text="storedPattern.pattern"
                   ></v-list-item-title>
                 </v-list-item-content>
+                <v-list-item-action>
+                  <v-icon
+                    color="yellow darken-3"
+                    @click="event => {
+                      event.stopPropagation();
+                      handleDeletePattern({event, id: storedPattern.id})
+                    }"
+                  >
+                    mdi-delete
+                  </v-icon>
+                </v-list-item-action>
               </v-list-item>
             </v-list-item-group>
           </v-list>
@@ -79,7 +92,14 @@ export default {
   }),
   computed:{
     ...mapState(['pattern', 'id', 'port', 'storedPatterns', 'newPatternStore', 'log', 'loaded']),
-    ...mapGetters(['apiUrl', 'patternCollection']),
+    ...mapGetters(['apiUrl']),
+    patternCollection() {
+      if(!this.storedPatterns) return;
+      return Object.keys(this.storedPatterns).map(key => ({
+      ...this.storedPatterns[key],
+      id: key
+    }))
+    }
   },
   watch: {
     editorPattern(newPattern){
@@ -90,11 +110,24 @@ export default {
       if(this.loaded) tryPattern(newPattern);
     },
     selectedPattern(newPattern){
-      if(newPattern != null) this.editorPattern = this.storedPatterns[newPattern].pattern; 
+      console.log(JSON.stringify(this.storedPatterns));
+      if(newPattern != null && this.patternCollection.length >= newPattern) {
+        this.editorPattern = this.patternCollection[newPattern].pattern || '';
+        // this.editorPattern = this.storedPatterns[newPattern].pattern;
+      }
     }
   },
   methods: {
     ...mapActions(['consoleOut']),
+    handleStorePattern(){
+      console.log('Handling store pattern', this.editorPattern);
+      this.$store.dispatch('addPattern', this.editorPattern);
+      this.selectedPattern = this.patternCollection.length - 1;
+    },
+    handleDeletePattern({event, id}){
+      console.log('Deleting at id:', id, event);
+      this.$store.dispatch('deletePattern', id);
+    },
     connect(){
       this.socket = new WebSocket(`ws://localhost:${this.port}/`);
 
@@ -169,5 +202,9 @@ export default {
  .v-list-item--dense, .v-list--dense .v-list-item {
         min-height: 25px;
   }
+  .v-list-item__action{
+    margin: 0;
+  }
 }
+
 </style>

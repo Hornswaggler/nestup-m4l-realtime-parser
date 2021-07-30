@@ -2,6 +2,8 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import defaultPatterns from '../assets/patterns';
 
+console.log(defaultPatterns);
+
 Vue.use(Vuex);
 
 // const MAX_LOG = 5000000;
@@ -35,6 +37,7 @@ const initialState = () => ({
   ...extractParamsFromUrl(),
 });
 
+console.log('Initial State: ', initialState());
 
 const persistStateToLocalStorage = ({id, key, payload}) => {
   // const urlSearchParams = new URLSearchParams(window.location.search);
@@ -60,6 +63,7 @@ const actions = {
 
     try{
       const persistedStore = JSON.parse(localStorage[state.id]);
+      console.log('Persisted State: ', persistedStore);
       Object.keys(persistedStore).map(key => commit(key, persistedStore[key]));
     } catch(e) {
       //consume
@@ -71,6 +75,26 @@ const actions = {
   consoleOut({commit, state}, message = ''){
     // if((state.log.length + message.length) >= MAX_LOG) dispatch('clearLog');
     commit('log',`${new Date().toLocaleString()} - ${message}\n${state.log}`);
+  },
+  addPattern({commit, state, getters}, pattern){
+    const patternCollection = getters.patternCollection;
+    console.log(patternCollection);
+    const nextId = patternCollection.length === 0 
+      ? 0 
+      : Math.max(...Object.keys(state.storedPatterns)
+        .map(key => parseInt(key))) + 1;
+        
+    const storedPatterns = {...state.storedPatterns, [nextId]: {pattern}};
+    commit('storedPatterns', storedPatterns);
+    console.log('Persisting...', storedPatterns);
+    persistStateToLocalStorage({id: state.id, key:'storedPatterns', payload: storedPatterns});
+  },
+  deletePattern({state, commit}, key){
+    console.log('Deleteing pattern: ', key);
+    const result = {...state.storedPatterns};
+    delete result[key];
+    commit('storedPatterns', result)
+    persistStateToLocalStorage({id: state.id, key:'storedPatterns', payload: result})
   }
 }
 
@@ -88,13 +112,19 @@ const getters = {
 
 const mutations = {
   ...Object.keys(primitives).reduce((acc, key) => ({
-  ...acc,
+    ...acc,
     [key]: (state, payload) => { 
       state[key] = payload; 
       state.loaded && !localStorageExclude.includes(key) && persistStateToLocalStorage({id: state.id, key, payload}); 
       return state;
     }
-  }), {})
+  }), {}),
+  storedPatterns(state, storedPatterns){
+    console.log('Changine Patterns' , storedPatterns);
+    state.storedPatterns = storedPatterns;
+
+    // state.storedPatterns = {...state.storedPatterns, {[Math.max(...Object)]}};
+  }
 };
 
 export default new Vuex.Store({
